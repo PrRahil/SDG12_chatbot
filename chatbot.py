@@ -26,7 +26,7 @@ class SDG12Chatbot:
         
         # Configure Gemini
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite-preview-06-17')
         
         # System prompt for SDG 12 focus
         self.system_prompt = """You are an expert sustainability advisor specializing in SDG 12: Responsible Consumption and Production. Your role is to help users make sustainable purchasing decisions and adopt responsible consumption practices.
@@ -38,7 +38,7 @@ class SDG12Chatbot:
         - Sustainable shopping practices
         - Circular economy principles
         - Environmental impact awareness
-        
+
         Guidelines:
         - Provide practical, actionable advice
         - Be encouraging and positive about sustainable choices
@@ -47,7 +47,7 @@ class SDG12Chatbot:
         - Keep responses concise but informative
         - Ask clarifying questions when needed
         - Focus on achievable changes for everyday consumers
-        
+
         Always maintain a helpful, knowledgeable, and encouraging tone while promoting responsible consumption and production practices."""
         
         # Rate limiting
