@@ -1,4 +1,7 @@
 import os
+import streamlit as st
+import time
+import random
 import google.generativeai as genai
 from typing import List, Dict
 from dotenv import load_dotenv
@@ -9,13 +12,19 @@ load_dotenv()
 class SDG12Chatbot:
     def __init__(self):
         """Initialize the SDG 12 chatbot with Gemini AI."""
-        self.api_key = os.getenv("GEMINI_API_KEY")
+        # Try to get API key from Streamlit secrets first, then from environment
+        try:
+            self.api_key = st.secrets["GEMINI_API_KEY"]
+        except (KeyError, AttributeError):
+            # Fallback to environment variable (for local development)
+            self.api_key = os.getenv("GEMINI_API_KEY")
+        
         if not self.api_key:
-            raise ValueError("GEMINI_API_KEY not found in environment variables")
+            raise ValueError("GEMINI_API_KEY not found in Streamlit secrets or environment variables")
         
         # Configure Gemini
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-2.5-flash-lite-preview-06-17')
+        self.model = genai.GenerativeModel('gemini-pro')
         
         # System prompt for SDG 12 focus
         self.system_prompt = """You are an expert sustainability advisor specializing in SDG 12: Responsible Consumption and Production. Your role is to help users make sustainable purchasing decisions and adopt responsible consumption practices.
@@ -38,6 +47,10 @@ Guidelines:
 - Focus on achievable changes for everyday consumers
 
 Always maintain a helpful, knowledgeable, and encouraging tone while promoting responsible consumption and production practices."""
+        
+        # Rate limiting
+        self.last_request_time = 0
+        self.min_request_interval = 2  # 2 seconds between requests
 
     def get_response(self, user_message: str, conversation_history: List[Dict] = None) -> str:
         """Generate a response using Gemini AI."""
@@ -53,6 +66,12 @@ Always maintain a helpful, knowledgeable, and encouraging tone while promoting r
                 ])
                 full_prompt = f"{self.system_prompt}\n\nConversation History:\n{context}\n\nUser: {user_message}\n\nAssistant:"
             
+            # Enforce rate limiting
+            current_time = time.time()
+            time_since_last_request = current_time - self.last_request_time
+            if time_since_last_request < self.min_request_interval:
+                time.sleep(self.min_request_interval - time_since_last_request)
+            
             response = self.model.generate_content(
                 full_prompt,
                 generation_config=genai.types.GenerationConfig(
@@ -61,6 +80,9 @@ Always maintain a helpful, knowledgeable, and encouraging tone while promoting r
                     top_p=0.8,
                 )
             )
+            
+            # Update last request time
+            self.last_request_time = time.time()
             
             return response.text.strip()
             

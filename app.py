@@ -186,12 +186,26 @@ st.markdown("""
 
 # Initialize chatbot
 @st.cache_resource
-def initialize_chatbot():
+def init_chatbot():
     try:
-        chatbot = SDG12Chatbot()
-        return chatbot
+        return SDG12Chatbot()
+    except ValueError as e:
+        st.error(f"Configuration Error: {str(e)}")
+        st.info("""
+        **To fix this issue:**
+        
+        **For Streamlit Cloud:**
+        1. Go to your app settings
+        2. Navigate to the 'Secrets' tab
+        3. Add: `GEMINI_API_KEY = "your_api_key_here"`
+        
+        **For Local Development:**
+        1. Create a `.env` file
+        2. Add: `GEMINI_API_KEY=your_api_key_here`
+        """)
+        return None
     except Exception as e:
-        st.error(f"Failed to initialize chatbot: {str(e)}")
+        st.error(f"Initialization Error: {str(e)}")
         return None
 
 # Initialize session state
@@ -199,7 +213,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "chatbot" not in st.session_state:
-    st.session_state.chatbot = initialize_chatbot()
+    st.session_state.chatbot = init_chatbot()
 
 # Header
 st.markdown("<h1 class='main-header'>🌱 SDG 12 Sustainability Assistant</h1>", unsafe_allow_html=True)
