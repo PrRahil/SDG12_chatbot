@@ -13,74 +13,42 @@ class SDG12Chatbot:
     def __init__(self):
         """Initialize the SDG 12 chatbot with Gemini AI."""
         
-        # Debug: Show what secrets are available (remove in production)
-        if hasattr(st, 'secrets'):
-            st.write("Available secrets:", list(st.secrets.keys()) if st.secrets else "No secrets found")
-        
-        # Try multiple ways to get the API key
+         # Try to get API key from Streamlit secrets first, then from environment
         self.api_key = None
         
-        # Method 1: Streamlit secrets (for cloud deployment)
         try:
             self.api_key = st.secrets["GEMINI_API_KEY"]
-            st.write("✅ API key loaded from Streamlit secrets")
-        except Exception as e:
-            st.write(f"❌ Streamlit secrets failed: {e}")
-            
-        # Method 2: Environment variable (for local development)
-        if not self.api_key:
-            try:
-                self.api_key = os.getenv("GEMINI_API_KEY")
-                if self.api_key:
-                    st.write("✅ API key loaded from environment variable")
-                else:
-                    st.write("❌ No API key in environment variables")
-            except Exception as e:
-                st.write(f"❌ Environment variable failed: {e}")
-        
-        # Method 3: Direct from secrets dict
-        if not self.api_key:
-            try:
-                if hasattr(st, 'secrets') and hasattr(st.secrets, 'get'):
-                    self.api_key = st.secrets.get("GEMINI_API_KEY")
-                    if self.api_key:
-                        st.write("✅ API key loaded from secrets.get()")
-            except Exception as e:
-                st.write(f"❌ secrets.get() failed: {e}")
+        except (KeyError, AttributeError):
+            self.api_key = os.getenv("GEMINI_API_KEY")
         
         if not self.api_key:
-            raise ValueError("GEMINI_API_KEY not found in any source")
+            raise ValueError("GEMINI_API_KEY not found in Streamlit secrets or environment variables")
         
         # Configure Gemini
-        try:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-2.5-flash-lite-preview-06-17')
-            st.write("✅ Gemini AI configured successfully")
-        except Exception as e:
-            st.write(f"❌ Gemini configuration failed: {e}")
-            raise ValueError(f"Failed to configure Gemini AI: {e}")
+        genai.configure(api_key=self.api_key)
+        self.model = genai.GenerativeModel('gemini-pro')
         
         # System prompt for SDG 12 focus
         self.system_prompt = """You are an expert sustainability advisor specializing in SDG 12: Responsible Consumption and Production. Your role is to help users make sustainable purchasing decisions and adopt responsible consumption practices.
 
-Key areas of expertise:
-- Eco-friendly product recommendations
-- Waste reduction strategies for households and daily life
-- Recycling and repurposing guidance for common items
-- Sustainable shopping practices
-- Circular economy principles
-- Environmental impact awareness
-
-Guidelines:
-- Provide practical, actionable advice
-- Be encouraging and positive about sustainable choices
-- Explain environmental benefits clearly
-- Suggest specific brands or alternatives when helpful
-- Keep responses concise but informative
-- Ask clarifying questions when needed
-- Focus on achievable changes for everyday consumers
-
-Always maintain a helpful, knowledgeable, and encouraging tone while promoting responsible consumption and production practices."""
+        Key areas of expertise:
+        - Eco-friendly product recommendations
+        - Waste reduction strategies for households and daily life
+        - Recycling and repurposing guidance for common items
+        - Sustainable shopping practices
+        - Circular economy principles
+        - Environmental impact awareness
+        
+        Guidelines:
+        - Provide practical, actionable advice
+        - Be encouraging and positive about sustainable choices
+        - Explain environmental benefits clearly
+        - Suggest specific brands or alternatives when helpful
+        - Keep responses concise but informative
+        - Ask clarifying questions when needed
+        - Focus on achievable changes for everyday consumers
+        
+        Always maintain a helpful, knowledgeable, and encouraging tone while promoting responsible consumption and production practices."""
         
         # Rate limiting
         self.last_request_time = 0
