@@ -54,7 +54,7 @@ class SDG12Chatbot:
         # Configure Gemini
         try:
             genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-pro')
+            self.model = genai.GenerativeModel('gemini-2.5-flash-lite-preview-06-17')
             st.write("✅ Gemini AI configured successfully")
         except Exception as e:
             st.write(f"❌ Gemini configuration failed: {e}")
